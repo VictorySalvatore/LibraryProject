@@ -39,5 +39,39 @@ namespace LibraryTests
             m.ReturnLoan(loan.Id);
             Assert.That(m.FindBook("82-31").Now, Is.EqualTo(4));
         }
+        [Test]
+        public void ReturnReturnedLoan()
+        {
+            Loan loan = m.IssueLoan("82-31", 1);
+            m.ReturnLoan(loan.Id);
+            Assert.Throws<LibraryException>(() => m.ReturnLoan(loan.Id));
+        }
+        [Test]
+        public void IssueLoanWhenNoCopies()
+        {
+            m.IssueLoan("61", 1);
+            Assert.Throws<LibraryException>(() => m.IssueLoan("61", 2));
+        }
+        [Test]
+        public void IssueLoanToBlockedReader()
+        {
+            Reader r = m.FindReader(1);
+            r.IsActive = false;
+            Assert.Throws<LibraryException>(() => m.IssueLoan("517.2", r.Id));
+        }
+        [Test]
+        public void PenaltyIsZero()
+        {
+            Loan loan = m.IssueLoan("53.01", 2, 14);
+            decimal pen = m.Penalty(loan.Id);
+            Assert.That(pen, Is.EqualTo(0));
+        }
+        [Test]
+        public void PenaltyIsPositive()
+        {
+            Loan loan = m.IssueLoan("53.01", 2, -5);
+            decimal pen = m.Penalty(loan.Id);
+            Assert.That(pen, Is.GreaterThan(0));
+        }
     }
 }
